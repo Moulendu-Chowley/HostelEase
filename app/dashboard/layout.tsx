@@ -108,7 +108,7 @@ export default function DashboardLayout({
               >
                 <Building2 className="h-8 w-8 text-blue-600" />
                 <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  HostelEase
+                  Hostel Manager
                 </span>
               </motion.div>
             )}

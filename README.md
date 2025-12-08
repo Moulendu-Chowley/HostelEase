@@ -1,4 +1,4 @@
-# HostelEase - Smart Hostel Management System
+# Hostel Manager - Smart Hostel Management System
 
 A modern, interactive web application built with Next.js 14 for comprehensive hostel management.
 
