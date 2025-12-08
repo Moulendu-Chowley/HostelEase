@@ -1,5 +1,5 @@
+import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import React from "react";
-import { FaDownload, FaFileCsv, FaFileExport, FaFilePdf } from "react-icons/fa";
 
 interface ExportButtonProps {
   onExportPDF?: () => void;
@@ -20,7 +20,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2"
       >
-        <FaDownload /> Export
+        <Download className="h-4 w-4" /> Export
       </button>
 
       {isOpen && (
@@ -33,7 +33,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               }}
               className="w-full px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700"
             >
-              <FaFilePdf className="text-red-500" /> Export PDF
+              <FileText className="h-4 w-4 text-red-500" /> Export PDF
             </button>
           )}
           {onExportCSV && (
@@ -44,7 +44,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               }}
               className="w-full px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700"
             >
-              <FaFileCsv className="text-green-500" /> Export CSV
+              <FileText className="h-4 w-4 text-green-500" /> Export CSV
             </button>
           )}
           {onExportExcel && (
@@ -55,7 +55,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               }}
               className="w-full px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700"
             >
-              <FaFileExport className="text-blue-500" /> Export Excel
+              <FileSpreadsheet className="h-4 w-4 text-blue-500" /> Export Excel
             </button>
           )}
         </div>

@@ -1,13 +1,13 @@
 "use client";
-import { motion } from "framer-motion";
-import { useState } from "react";
-import { UserCheck, UserX, Calendar, Clock } from "lucide-react";
-import { 
-  StatCard, 
-  CameraFeed, 
+import {
   AttendanceLogTable,
-  PageContainer
+  CameraFeed,
+  PageContainer,
+  StatCard,
 } from "@/components";
+import { motion } from "framer-motion";
+import { Calendar, Clock, UserCheck, UserX } from "lucide-react";
+import { useState } from "react";
 
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState(
@@ -172,7 +172,7 @@ export default function AttendancePage() {
           >
             <AttendanceLogTable
               data={filteredData}
-              filter={selectedFilter}
+              selectedFilter={selectedFilter}
               onFilterChange={setSelectedFilter}
             />
           </motion.div>

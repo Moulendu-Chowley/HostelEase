@@ -172,7 +172,7 @@ export default function AttendancePage() {
           >
             <AttendanceLogTable
               data={filteredData}
-              filter={selectedFilter}
+              selectedFilter={selectedFilter}
               onFilterChange={setSelectedFilter}
             />
           </motion.div>

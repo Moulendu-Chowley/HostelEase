@@ -1,14 +1,13 @@
 "use client";
-import { motion } from "framer-motion";
-import { useState } from "react";
-import { Users, Calendar, CheckCircle, Clock } from "lucide-react";
-import { 
-  StatCard, 
-  MessSchedule,
+import {
   MessCommittee,
-  Button,
-  PageContainer
+  MessSchedule,
+  PageContainer,
+  StatCard,
 } from "@/components";
+import { motion } from "framer-motion";
+import { Calendar, CheckCircle, Clock, Users } from "lucide-react";
+import { useState } from "react";
 
 export default function MessManagementPage() {
   const [currentWeek, setCurrentWeek] = useState(0);
@@ -22,21 +21,110 @@ export default function MessManagementPage() {
   };
 
   const schedule = [
-    { day: "Monday", meal: "Breakfast", menu: "Idli, Sambar, Chutney", committee: "Team A" },
-    { day: "Monday", meal: "Lunch", menu: "Rice, Dal, Sabzi, Roti", committee: "Team A" },
-    { day: "Monday", meal: "Dinner", menu: "Chapati, Paneer, Rice", committee: "Team A" },
-    { day: "Tuesday", meal: "Breakfast", menu: "Poha, Chai", committee: "Team B" },
-    { day: "Tuesday", meal: "Lunch", menu: "Chole, Rice, Roti", committee: "Team B" },
-    { day: "Tuesday", meal: "Dinner", menu: "Dal Fry, Rice, Roti", committee: "Team B" },
-    { day: "Wednesday", meal: "Breakfast", menu: "Upma, Coffee", committee: "Team A" },
+    {
+      week: 1,
+      day: "Monday",
+      breakfast: "Idli, Sambar, Chutney",
+      lunch: "Rice, Dal, Sabzi, Roti",
+      dinner: "Chapati, Paneer, Rice",
+      duty: "Team A",
+    },
+    {
+      week: 1,
+      day: "Tuesday",
+      breakfast: "Poha, Chai",
+      lunch: "Chole, Rice, Roti",
+      dinner: "Dal Fry, Rice, Roti",
+      duty: "Team B",
+    },
+    {
+      week: 1,
+      day: "Wednesday",
+      breakfast: "Upma, Coffee",
+      lunch: "Rajma, Rice, Roti",
+      dinner: "Chicken Curry, Rice",
+      duty: "Team A",
+    },
+    {
+      week: 1,
+      day: "Thursday",
+      breakfast: "Dosa, Chutney",
+      lunch: "Kadhi, Rice, Roti",
+      dinner: "Mixed Veg, Roti",
+      duty: "Team B",
+    },
+    {
+      week: 1,
+      day: "Friday",
+      breakfast: "Paratha, Curd",
+      lunch: "Biryani, Raita",
+      dinner: "Dal Makhani, Roti",
+      duty: "Team A",
+    },
+    {
+      week: 1,
+      day: "Saturday",
+      breakfast: "Sandwich, Tea",
+      lunch: "Pulao, Curry",
+      dinner: "Pizza, Salad",
+      duty: "Team B",
+    },
+    {
+      week: 1,
+      day: "Sunday",
+      breakfast: "Puri Bhaji",
+      lunch: "Special Thali",
+      dinner: "Noodles, Manchurian",
+      duty: "Team A",
+    },
   ];
 
   const members = [
-    { id: 1, name: "Rahul Sharma", role: "Head", year: "3rd Year", rollNo: "HS2021001" },
-    { id: 2, name: "Priya Singh", role: "Deputy", year: "2nd Year", rollNo: "HS2022015" },
-    { id: 3, name: "Amit Kumar", role: "Member", year: "1st Year", rollNo: "HS2023032" },
-    { id: 4, name: "Sneha Patel", role: "Member", year: "3rd Year", rollNo: "HS2021045" },
-    { id: 5, name: "Vikram Reddy", role: "Member", year: "2nd Year", rollNo: "HS2022078" },
+    {
+      id: 1,
+      name: "Rahul Sharma",
+      role: "Head",
+      year: "3rd Year",
+      rollNo: "HS2021001",
+      room: "101",
+      contact: "+91-9876543210",
+    },
+    {
+      id: 2,
+      name: "Priya Singh",
+      role: "Deputy",
+      year: "2nd Year",
+      rollNo: "HS2022015",
+      room: "203",
+      contact: "+91-9876543211",
+    },
+    {
+      id: 3,
+      name: "Amit Kumar",
+      role: "Member",
+      year: "1st Year",
+      rollNo: "HS2023032",
+      room: "305",
+      contact: "+91-9876543212",
+    },
+    {
+      id: 4,
+      name: "Sneha Patel",
+      role: "Member",
+      year: "3rd Year",
+      rollNo: "HS2021045",
+      room: "102",
+      contact: "+91-9876543213",
+    },
+    {
+      id: 5,
+      name: "Vikram Reddy",
+      role: "Member",
+      year: "2nd Year",
+      rollNo: "HS2022078",
+      room: "207",
+      contact: "+91-9876543214",
+    },
   ];
 
   const handleGenerateCommittee = () => {
@@ -128,52 +216,66 @@ export default function MessManagementPage() {
           transition={{ delay: 0.6 }}
           className="bg-white rounded-2xl shadow-lg p-8"
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">System Features</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            System Features
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex gap-4">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Calendar className="text-green-600" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Weekly Rotation</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  Weekly Rotation
+                </h3>
                 <p className="text-gray-600 text-sm">
-                  Automated 7-day mess duty schedule with fair distribution across all students
+                  Automated 7-day mess duty schedule with fair distribution
+                  across all students
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Users className="text-blue-600" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Committee of 5</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  Committee of 5
+                </h3>
                 <p className="text-gray-600 text-sm">
-                  Auto-generated committee of 5 students selected fairly across different years
+                  Auto-generated committee of 5 students selected fairly across
+                  different years
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <CheckCircle className="text-purple-600" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Menu Planning</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  Menu Planning
+                </h3>
                 <p className="text-gray-600 text-sm">
-                  Weekly menu planning with student feedback and dietary preferences considered
+                  Weekly menu planning with student feedback and dietary
+                  preferences considered
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Clock className="text-orange-600" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Quick Resolution</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  Quick Resolution
+                </h3>
                 <p className="text-gray-600 text-sm">
-                  Track and resolve mess-related complaints with average 2.5h response time
+                  Track and resolve mess-related complaints with average 2.5h
+                  response time
                 </p>
               </div>
             </div>

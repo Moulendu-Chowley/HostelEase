@@ -1,5 +1,5 @@
+import { Bell, Menu, Search, User } from "lucide-react";
 import React from "react";
-import { FaBars, FaBell, FaSearch, FaUser } from "react-icons/fa";
 
 interface HeaderProps {
   title: string;
@@ -21,7 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onMenuClick}
             className="lg:hidden text-gray-600 hover:text-gray-800 transition"
           >
-            <FaBars className="text-2xl" />
+            <Menu className="h-6 w-6" />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-4">
           {/* Search */}
           <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-4 py-2">
-            <FaSearch className="text-gray-400 mr-2" />
+            <Search className="h-4 w-4 text-gray-400 mr-2" />
             <input
               type="text"
               placeholder="Search..."
@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Notifications */}
           <button className="relative text-gray-600 hover:text-gray-800 transition">
-            <FaBell className="text-xl" />
+            <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               3
             </span>
@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Profile */}
           <button className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-3 py-2 transition">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white">
-              <FaUser className="text-sm" />
+              <User className="h-4 w-4" />
             </div>
             <span className="hidden md:block font-semibold text-gray-700">
               Admin
