@@ -74,7 +74,7 @@ export const RecognitionStats: React.FC<RecognitionStatsProps> = ({
 }) => {
   return (
     <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
-      <h3 className="font-semibold mb-2 text-gray-800">Today's Scans</h3>
+      <h3 className="font-semibold mb-2 text-gray-800">Today&apos;s Scans</h3>
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="bg-white rounded-lg p-2">
           <p className="text-gray-600">Successful</p>

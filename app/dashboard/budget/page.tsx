@@ -177,7 +177,7 @@ export default function BudgetPage() {
                   Smart Forecasting
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  ML models analyze 6-month trends to predict next month's
+                  ML models analyze 6-month trends to predict next month&apos;s
                   expenses with 94% accuracy
                 </p>
               </div>
