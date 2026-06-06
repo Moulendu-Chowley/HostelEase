@@ -69,6 +69,7 @@ export default function DashboardOverview() {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -340,11 +341,21 @@ export default function DashboardOverview() {
     reader.readAsDataURL(file);
   };
 
-  // Remove photo
-  const handleRemovePhoto = async () => {
+  // Remove photo — two-click confirmation (avoids browser-blocked confirm())
+  const handleRemovePhoto = () => {
     if (!profile) return;
-    if (!confirm("Are you sure you want to remove your face profile photo? This will disable facial recognition for your account.")) return;
+    if (!confirmingRemove) {
+      setConfirmingRemove(true);
+      // Auto-cancel confirmation after 4 seconds
+      setTimeout(() => setConfirmingRemove(false), 4000);
+      return;
+    }
+    setConfirmingRemove(false);
+    void performRemovePhoto();
+  };
 
+  const performRemovePhoto = async () => {
+    if (!profile) return;
     setIsUploading(true);
     setUploadMessage("");
 
@@ -482,10 +493,14 @@ export default function DashboardOverview() {
                   {profile?.photo_url && (
                     <button
                       onClick={handleRemovePhoto}
-                      className="flex items-center space-x-2 px-5 py-3 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition"
+                      className={`flex items-center space-x-2 px-5 py-3 font-semibold rounded-xl transition ${
+                        confirmingRemove
+                          ? "bg-red-600 text-white hover:bg-red-700 animate-pulse"
+                          : "bg-red-50 text-red-600 hover:bg-red-100"
+                      }`}
                     >
                       <Trash2 className="h-5 w-5" />
-                      <span>Remove Profile</span>
+                      <span>{confirmingRemove ? "Confirm Remove?" : "Remove Profile"}</span>
                     </button>
                   )}
                 </div>
