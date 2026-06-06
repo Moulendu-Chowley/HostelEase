@@ -51,8 +51,20 @@ export async function POST(request: Request) {
 
   const result = (await dfRes.json()) as DeepFaceResult;
 
+  console.log("[recognize] DeepFace response:", {
+    status: dfRes.status,
+    matched: result.matched,
+    student_id: result.student_id,
+    confidence: result.confidence,
+    message: result.message,
+  });
+
   if (!result.matched || !result.student_id) {
-    return NextResponse.json({ matched: false, confidence: 0 });
+    return NextResponse.json({
+      matched: false,
+      confidence: 0,
+      message: result.message ?? "No match",
+    });
   }
 
   // Enrich with student name from Supabase

@@ -37,7 +37,7 @@ FACES_DIR.mkdir(parents=True, exist_ok=True)
 
 MODEL_NAME = "ArcFace"          # Fast and accurate
 DISTANCE_METRIC = "cosine"
-THRESHOLD = float(os.getenv("RECOGNITION_THRESHOLD", "0.40"))
+THRESHOLD = float(os.getenv("RECOGNITION_THRESHOLD", "0.68"))
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
