@@ -1,22 +1,68 @@
 "use client";
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { ArrowRight, Building2, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     role: "student",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login attempt:", formData);
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    const supabase = getSupabaseBrowserClient();
+
+    if (!supabase) {
+      setErrorMessage(
+        "Supabase is not configured. Please set environment variables.",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const role = String(user?.user_metadata?.role || "student").toLowerCase();
+
+    if (role !== formData.role) {
+      await supabase.auth.signOut();
+      setErrorMessage(`This account is not registered as ${formData.role}.`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setIsSubmitting(false);
+
+    const next = searchParams.get("next") || "/dashboard";
+    router.push(next);
+    router.refresh();
   };
 
   return (
@@ -146,11 +192,18 @@ export default function LoginPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
+              disabled={isSubmitting}
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl flex items-center justify-center group"
             >
-              Sign In
+              {isSubmitting ? "Signing In..." : "Sign In"}
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </motion.button>
+
+            {errorMessage && (
+              <p className="text-sm font-medium text-red-600 bg-red-50 rounded-lg p-3">
+                {errorMessage}
+              </p>
+            )}
           </form>
 
           {/* Divider */}
@@ -220,5 +273,19 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex items-center justify-center p-4">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

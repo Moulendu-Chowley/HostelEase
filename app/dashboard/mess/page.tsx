@@ -7,133 +7,60 @@ import {
 } from "@/components";
 import { motion } from "framer-motion";
 import { Calendar, CheckCircle, Clock, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function MessManagementPage() {
   const [currentWeek, setCurrentWeek] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-
-  const stats = {
+  const [schedule, setSchedule] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [stats, setStats] = useState({
     totalStudents: 160,
-    activeCommittee: 5,
+    activeCommittee: 0,
     weeksRotated: 12,
     avgResponseTime: "2.5h",
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchMessData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/mess");
+      const data = await res.json();
+      if (res.ok) {
+        setSchedule(data.schedule || []);
+        setMembers(data.members || []);
+        setStats(data.stats || { totalStudents: 160, activeCommittee: 0, weeksRotated: 12, avgResponseTime: "2.5h" });
+      }
+    } catch (e) {
+      console.error("Failed to fetch mess data", e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const schedule = [
-    {
-      week: 1,
-      day: "Monday",
-      breakfast: "Idli, Sambar, Chutney",
-      lunch: "Rice, Dal, Sabzi, Roti",
-      dinner: "Chapati, Paneer, Rice",
-      duty: "Team A",
-    },
-    {
-      week: 1,
-      day: "Tuesday",
-      breakfast: "Poha, Chai",
-      lunch: "Chole, Rice, Roti",
-      dinner: "Dal Fry, Rice, Roti",
-      duty: "Team B",
-    },
-    {
-      week: 1,
-      day: "Wednesday",
-      breakfast: "Upma, Coffee",
-      lunch: "Rajma, Rice, Roti",
-      dinner: "Chicken Curry, Rice",
-      duty: "Team A",
-    },
-    {
-      week: 1,
-      day: "Thursday",
-      breakfast: "Dosa, Chutney",
-      lunch: "Kadhi, Rice, Roti",
-      dinner: "Mixed Veg, Roti",
-      duty: "Team B",
-    },
-    {
-      week: 1,
-      day: "Friday",
-      breakfast: "Paratha, Curd",
-      lunch: "Biryani, Raita",
-      dinner: "Dal Makhani, Roti",
-      duty: "Team A",
-    },
-    {
-      week: 1,
-      day: "Saturday",
-      breakfast: "Sandwich, Tea",
-      lunch: "Pulao, Curry",
-      dinner: "Pizza, Salad",
-      duty: "Team B",
-    },
-    {
-      week: 1,
-      day: "Sunday",
-      breakfast: "Puri Bhaji",
-      lunch: "Special Thali",
-      dinner: "Noodles, Manchurian",
-      duty: "Team A",
-    },
-  ];
+  useEffect(() => {
+    void fetchMessData();
+  }, []);
 
-  const members = [
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      role: "Head",
-      year: "3rd Year",
-      rollNo: "HS2021001",
-      room: "101",
-      contact: "+91-9876543210",
-    },
-    {
-      id: 2,
-      name: "Priya Singh",
-      role: "Deputy",
-      year: "2nd Year",
-      rollNo: "HS2022015",
-      room: "203",
-      contact: "+91-9876543211",
-    },
-    {
-      id: 3,
-      name: "Amit Kumar",
-      role: "Member",
-      year: "1st Year",
-      rollNo: "HS2023032",
-      room: "305",
-      contact: "+91-9876543212",
-    },
-    {
-      id: 4,
-      name: "Sneha Patel",
-      role: "Member",
-      year: "3rd Year",
-      rollNo: "HS2021045",
-      room: "102",
-      contact: "+91-9876543213",
-    },
-    {
-      id: 5,
-      name: "Vikram Reddy",
-      role: "Member",
-      year: "2nd Year",
-      rollNo: "HS2022078",
-      room: "207",
-      contact: "+91-9876543214",
-    },
-  ];
-
-  const handleGenerateCommittee = () => {
+  const handleGenerateCommittee = async () => {
     setIsGenerating(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/mess", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "New mess committee generated successfully!");
+        await fetchMessData();
+      } else {
+        alert(data.error || "Failed to generate committee.");
+      }
+    } catch {
+      alert("Failed to generate committee.");
+    } finally {
       setIsGenerating(false);
-      alert("New committee generated successfully!");
-    }, 1500);
+    }
   };
+
 
   return (
     <PageContainer gradient="from-green-50 via-emerald-50 to-teal-50">

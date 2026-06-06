@@ -8,54 +8,79 @@ import {
 } from "@/components";
 import { motion } from "framer-motion";
 import { DollarSign, ShoppingCart, TrendingUp, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function BudgetPage() {
   const [period, setPeriod] = useState<"month" | "quarter" | "year">("month");
+  const [electricityData, setElectricityData] = useState<any[]>([]);
+  const [groceryData, setGroceryData] = useState<any[]>([]);
+  const [comparison, setComparison] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalBudget: "₹0",
+    electricityCost: "₹0",
+    groceryExpenses: "₹0",
+    predictedNextMonth: "₹0",
+    electricityPerStudent: "₹0",
+    groceryPerStudent: "₹0",
+    totalPerStudent: "₹0",
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const stats = [
+  const fetchBudgetData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/budget");
+      const data = await res.json();
+      if (res.ok) {
+        setElectricityData(data.electricityData || []);
+        setGroceryData(data.groceryData || []);
+        setComparison(data.comparison || []);
+        setStats(data.stats || {
+          totalBudget: "₹0",
+          electricityCost: "₹0",
+          groceryExpenses: "₹0",
+          predictedNextMonth: "₹0",
+          electricityPerStudent: "₹0",
+          groceryPerStudent: "₹0",
+          totalPerStudent: "₹0",
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch budget data", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchBudgetData();
+  }, []);
+
+  const statsItems = [
     {
       title: "Total Budget",
-      value: "₹45,000",
+      value: stats.totalBudget,
       icon: DollarSign,
       gradient: "from-blue-500 to-indigo-600",
     },
     {
       title: "Electricity Cost",
-      value: "₹28,500",
+      value: stats.electricityCost,
       icon: Zap,
       gradient: "from-yellow-500 to-orange-600",
     },
     {
       title: "Grocery Expenses",
-      value: "₹16,500",
+      value: stats.groceryExpenses,
       icon: ShoppingCart,
       gradient: "from-green-500 to-emerald-600",
     },
     {
       title: "Predicted Next Month",
-      value: "₹47,200",
+      value: stats.predictedNextMonth,
       icon: TrendingUp,
       gradient: "from-purple-500 to-pink-600",
     },
-  ];
-
-  const electricityData = [
-    { month: "Jul", units: 4200, cost: 24200 },
-    { month: "Aug", units: 4500, cost: 25800 },
-    { month: "Sep", units: 4300, cost: 24500 },
-    { month: "Oct", units: 4450, cost: 25200 },
-    { month: "Nov", units: 4700, cost: 26800 },
-    { month: "Dec", units: 5000, cost: 28500 },
-  ];
-
-  const groceryData = [
-    { category: "Vegetables", amount: 5200 },
-    { category: "Rice/Grains", amount: 3800 },
-    { category: "Dairy", amount: 2900 },
-    { category: "Spices", amount: 1500 },
-    { category: "Oil", amount: 1800 },
-    { category: "Others", amount: 1300 },
   ];
 
   return (
@@ -95,67 +120,75 @@ export default function BudgetPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Loading budget database...</p>
+          </div>
+        ) : (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {statsItems.map((stat, index) => (
+                <motion.div
+                  key={stat.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <StatCard {...stat} />
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Electricity Chart */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <ElectricityChart data={electricityData} />
+              </motion.div>
+
+              {/* Grocery Chart */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <GroceryChart data={groceryData} />
+              </motion.div>
+            </div>
+
+            {/* Budget Breakdown */}
             <motion.div
-              key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: 0.6 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
             >
-              <StatCard {...stat} />
+              <BudgetStatBox
+                title="Electricity per Student"
+                value={stats.electricityPerStudent}
+                subtitle="Calculated average"
+                gradient="from-yellow-500 to-orange-600"
+              />
+              <BudgetStatBox
+                title="Grocery per Student"
+                value={stats.groceryPerStudent}
+                subtitle="Calculated average"
+                gradient="from-green-500 to-emerald-600"
+              />
+              <BudgetStatBox
+                title="Total per Student"
+                value={stats.totalPerStudent}
+                subtitle="Calculated average"
+                gradient="from-blue-500 to-indigo-600"
+              />
             </motion.div>
-          ))}
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Electricity Chart */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <ElectricityChart data={electricityData} />
-          </motion.div>
-
-          {/* Grocery Chart */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <GroceryChart data={groceryData} />
-          </motion.div>
-        </div>
-
-        {/* Budget Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-        >
-          <BudgetStatBox
-            title="Electricity per Student"
-            value="₹178"
-            subtitle="+₹15 from last month"
-            gradient="from-yellow-500 to-orange-600"
-          />
-          <BudgetStatBox
-            title="Grocery per Student"
-            value="₹103"
-            subtitle="+₹5 from last month"
-            gradient="from-green-500 to-emerald-600"
-          />
-          <BudgetStatBox
-            title="Total per Student"
-            value="₹281"
-            subtitle="+₹20 from last month"
-            gradient="from-blue-500 to-indigo-600"
-          />
-        </motion.div>
+          </>
+        )}
 
         {/* AI Predictions Section */}
         <motion.div
@@ -230,113 +263,73 @@ export default function BudgetPage() {
         </motion.div>
 
         {/* Historical Data */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="mt-8 bg-white rounded-2xl shadow-lg p-8"
-        >
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            6-Month Comparison
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-4 text-gray-700 font-semibold">
-                    Month
-                  </th>
-                  <th className="text-right py-3 px-4 text-gray-700 font-semibold">
-                    Electricity
-                  </th>
-                  <th className="text-right py-3 px-4 text-gray-700 font-semibold">
-                    Grocery
-                  </th>
-                  <th className="text-right py-3 px-4 text-gray-700 font-semibold">
-                    Total
-                  </th>
-                  <th className="text-right py-3 px-4 text-gray-700 font-semibold">
-                    Change
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  {
-                    month: "December",
-                    elec: 28500,
-                    grocery: 16500,
-                    total: 45000,
-                    change: "+8%",
-                  },
-                  {
-                    month: "November",
-                    elec: 26800,
-                    grocery: 15200,
-                    total: 42000,
-                    change: "+5%",
-                  },
-                  {
-                    month: "October",
-                    elec: 25200,
-                    grocery: 14800,
-                    total: 40000,
-                    change: "+2%",
-                  },
-                  {
-                    month: "September",
-                    elec: 24500,
-                    grocery: 14700,
-                    total: 39200,
-                    change: "-3%",
-                  },
-                  {
-                    month: "August",
-                    elec: 25800,
-                    grocery: 14600,
-                    total: 40400,
-                    change: "+6%",
-                  },
-                  {
-                    month: "July",
-                    elec: 24200,
-                    grocery: 13900,
-                    total: 38100,
-                    change: "+4%",
-                  },
-                ].map((row, index) => (
-                  <tr
-                    key={row.month}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="py-3 px-4 font-medium text-gray-800">
-                      {row.month}
-                    </td>
-                    <td className="py-3 px-4 text-right text-gray-700">
-                      ₹{row.elec.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right text-gray-700">
-                      ₹{row.grocery.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold text-gray-800">
-                      ₹{row.total.toLocaleString()}
-                    </td>
-                    <td
-                      className={`py-3 px-4 text-right font-semibold ${
-                        row.change.startsWith("+")
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {row.change}
-                    </td>
+        {!isLoading && comparison.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-8 bg-white rounded-2xl shadow-lg p-8"
+          >
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              6-Month Comparison
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-3 px-4 text-gray-700 font-semibold">
+                      Month
+                    </th>
+                    <th className="text-right py-3 px-4 text-gray-700 font-semibold">
+                      Electricity
+                    </th>
+                    <th className="text-right py-3 px-4 text-gray-700 font-semibold">
+                      Grocery
+                    </th>
+                    <th className="text-right py-3 px-4 text-gray-700 font-semibold">
+                      Total
+                    </th>
+                    <th className="text-right py-3 px-4 text-gray-700 font-semibold">
+                      Change
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
+                </thead>
+                <tbody>
+                  {comparison.map((row) => (
+                    <tr
+                      key={row.month}
+                      className="border-b border-gray-100 hover:bg-gray-50"
+                    >
+                      <td className="py-3 px-4 font-medium text-gray-800">
+                        {row.month}
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-700">
+                        ₹{row.elec.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-700">
+                        ₹{row.grocery.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-800">
+                        ₹{row.total.toLocaleString()}
+                      </td>
+                      <td
+                        className={`py-3 px-4 text-right font-semibold ${
+                          row.change.startsWith("+")
+                            ? "text-red-600"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {row.change}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
 }
+

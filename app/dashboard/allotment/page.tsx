@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Home, Users, CheckCircle, DoorOpen } from "lucide-react";
 import { 
   StatCard, 
@@ -13,88 +13,57 @@ import {
 export default function RoomAllotmentPage() {
   const [showAllocationModal, setShowAllocationModal] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    occupied: 0,
+    available: 0,
+    pending: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAllocating, setIsAllocating] = useState(false);
 
-  // Mock room data (2 students per room)
-  const rooms = [
-    {
-      id: 1,
-      number: "101",
-      floor: 1,
-      capacity: 2,
-      students: ["Rahul Sharma", "Amit Kumar"],
-      year: "3rd Year",
-      status: "full" as const,
-    },
-    {
-      id: 2,
-      number: "102",
-      floor: 1,
-      capacity: 2,
-      students: ["Priya Singh", "Sneha Patel"],
-      year: "2nd Year",
-      status: "full" as const,
-    },
-    {
-      id: 3,
-      number: "103",
-      floor: 1,
-      capacity: 2,
-      students: ["Vikram Reddy"],
-      year: "3rd Year",
-      status: "available" as const,
-    },
-    {
-      id: 4,
-      number: "104",
-      floor: 1,
-      capacity: 2,
-      students: [],
-      year: "-",
-      status: "available" as const,
-    },
-    {
-      id: 5,
-      number: "201",
-      floor: 2,
-      capacity: 2,
-      students: ["Rohan Verma", "Arjun Nair"],
-      year: "2nd Year",
-      status: "full" as const,
-    },
-    {
-      id: 6,
-      number: "202",
-      floor: 2,
-      capacity: 2,
-      students: ["Kavya Iyer", "Ananya Das"],
-      year: "1st Year",
-      status: "full" as const,
-    },
-    {
-      id: 7,
-      number: "203",
-      floor: 2,
-      capacity: 2,
-      students: ["Divya Menon"],
-      year: "1st Year",
-      status: "available" as const,
-    },
-    {
-      id: 8,
-      number: "204",
-      floor: 2,
-      capacity: 2,
-      students: [],
-      year: "-",
-      status: "available" as const,
-    },
-  ];
+  const fetchAllotments = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/allotment");
+      const data = await res.json();
+      if (res.ok) {
+        setRooms(data.rooms || []);
+        setStats(data.stats || { total: 0, occupied: 0, available: 0, pending: 0 });
+      }
+    } catch (e) {
+      console.error("Failed to fetch allotments", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const stats = {
-    total: 120,
-    occupied: 98,
-    available: 22,
-    pending: 15,
+  useEffect(() => {
+    void fetchAllotments();
+  }, []);
+
+  const handleAutoAllocate = async () => {
+    setIsAllocating(true);
+    try {
+      const res = await fetch("/api/allotment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "auto" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Auto-allocation completed successfully!");
+        setShowAllocationModal(false);
+        await fetchAllotments();
+      } else {
+        alert(data.error || "Failed to auto-allocate rooms.");
+      }
+    } catch {
+      alert("Failed to auto-allocate rooms.");
+    } finally {
+      setIsAllocating(false);
+    }
   };
 
   const filteredRooms = rooms.filter((room) => {
@@ -139,19 +108,19 @@ export default function RoomAllotmentPage() {
             gradient="from-blue-400 to-blue-600"
           />
           <StatCard
-            title="Occupied"
+            title="Occupied Beds"
             value={stats.occupied}
             icon={Users}
             gradient="from-green-400 to-green-600"
           />
           <StatCard
-            title="Available"
+            title="Available Rooms"
             value={stats.available}
             icon={DoorOpen}
             gradient="from-orange-400 to-orange-600"
           />
           <StatCard
-            title="Pending Requests"
+            title="Pending Students"
             value={stats.pending}
             icon={CheckCircle}
             gradient="from-purple-400 to-purple-600"
@@ -176,22 +145,37 @@ export default function RoomAllotmentPage() {
         </div>
 
         {/* Room Grid - Using RoomCard Component */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredRooms.map((room, index) => (
-            <motion.div
-              key={room.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <RoomCard 
-                room={room}
-                onAllocate={() => console.log("Allocate to", room.number)}
-                onViewDetails={() => console.log("View details for", room.number)}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Loading allotments database...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredRooms.map((room, index) => (
+              <motion.div
+                key={room.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <RoomCard 
+                  room={room}
+                  onAllocate={() => console.log("Allocate to", room.number)}
+                  onViewDetails={() => console.log("View details for", room.number)}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {filteredRooms.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <Home className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg">
+              No allotments found matching your criteria.
+            </p>
+          </div>
+        )}
 
         {/* Auto Allocation Info */}
         <motion.div
@@ -288,13 +272,10 @@ export default function RoomAllotmentPage() {
             <div className="flex gap-3 mt-6">
               <Button
                 variant="primary"
-                onClick={() => {
-                  // Allocation logic here
-                  setShowAllocationModal(false);
-                  alert("Auto-allocation initiated! Processing 15 pending requests...");
-                }}
+                onClick={handleAutoAllocate}
+                disabled={isAllocating}
               >
-                Start Allocation
+                {isAllocating ? "Processing AI..." : "Start Allocation"}
               </Button>
               <Button
                 variant="secondary"
@@ -309,3 +290,4 @@ export default function RoomAllotmentPage() {
     </PageContainer>
   );
 }
+

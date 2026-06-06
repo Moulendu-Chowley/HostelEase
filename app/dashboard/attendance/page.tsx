@@ -5,104 +5,139 @@ import {
   PageContainer,
   StatCard,
 } from "@/components";
+import { type RecognitionResult } from "@/components/features/FacialRecognition";
 import { motion } from "framer-motion";
 import { Calendar, Clock, UserCheck, UserX } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+type AttendanceRow = {
+  id: string;
+  name: string;
+  rollNo: string;
+  time: string;
+  type: "entry" | "exit";
+  image: string;
+  date: string;
+};
+
+type StudentOption = {
+  id: string;
+  name: string;
+  rollNo: string;
+};
+
+type AttendancePayload = {
+  data: AttendanceRow[];
+  students: StudentOption[];
+  stats: {
+    present: number;
+    absent: number;
+    onLeave: number;
+    lateEntry: number;
+  };
+};
 
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [recognitionMode, setRecognitionMode] = useState(false);
+  const [cameraMode, setCameraMode] = useState<"entry" | "exit">("entry");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [students, setStudents] = useState<StudentOption[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
+  const [stats, setStats] = useState({
+    present: 0,
+    absent: 0,
+    onLeave: 0,
+    lateEntry: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
 
-  // Mock data for entry/exit logs
-  const attendanceData = [
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      rollNo: "HS2021001",
-      time: "08:45 AM",
-      type: "entry" as const,
-      image: "👨",
-      date: "2025-12-07",
-    },
-    {
-      id: 2,
-      name: "Priya Singh",
-      rollNo: "HS2021002",
-      time: "09:12 AM",
-      type: "entry" as const,
-      image: "👩",
-      date: "2025-12-07",
-    },
-    {
-      id: 3,
-      name: "Amit Kumar",
-      rollNo: "HS2021003",
-      time: "10:30 AM",
-      type: "exit" as const,
-      image: "👨",
-      date: "2025-12-07",
-    },
-    {
-      id: 4,
-      name: "Sneha Patel",
-      rollNo: "HS2021004",
-      time: "11:15 AM",
-      type: "entry" as const,
-      image: "👩",
-      date: "2025-12-07",
-    },
-    {
-      id: 5,
-      name: "Vikram Reddy",
-      rollNo: "HS2021005",
-      time: "02:20 PM",
-      type: "exit" as const,
-      image: "👨",
-      date: "2025-12-07",
-    },
-    {
-      id: 6,
-      name: "Ananya Das",
-      rollNo: "HS2021006",
-      time: "03:45 PM",
-      type: "entry" as const,
-      image: "👩",
-      date: "2025-12-07",
-    },
-    {
-      id: 7,
-      name: "Rohan Verma",
-      rollNo: "HS2021007",
-      time: "05:10 PM",
-      type: "exit" as const,
-      image: "👨",
-      date: "2025-12-07",
-    },
-    {
-      id: 8,
-      name: "Kavya Iyer",
-      rollNo: "HS2021008",
-      time: "06:30 PM",
-      type: "entry" as const,
-      image: "👩",
-      date: "2025-12-07",
-    },
-  ];
+  const loadAttendance = async () => {
+    setIsLoading(true);
 
-  const stats = {
-    present: 142,
-    absent: 18,
-    onLeave: 5,
-    lateEntry: 12,
+    try {
+      const response = await fetch(`/api/attendance?date=${selectedDate}`, {
+        cache: "no-store",
+      });
+
+      const payload = (await response.json()) as
+        | AttendancePayload
+        | { error: string };
+
+      if (!response.ok || "error" in payload) {
+        setMessage("Failed to load attendance data.");
+        return;
+      }
+
+      setAttendanceData(payload.data);
+      setStudents(payload.students);
+      setStats(payload.stats);
+
+      if (!selectedStudentId && payload.students.length > 0) {
+        setSelectedStudentId(payload.students[0].id);
+      }
+    } catch {
+      setMessage("Unable to connect to attendance service.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const filteredData = attendanceData.filter((entry) => {
-    if (selectedFilter === "all") return true;
-    return entry.type === selectedFilter;
-  });
+  useEffect(() => {
+    void loadAttendance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
+
+  const filteredData = useMemo(
+    () =>
+      attendanceData.filter((entry) => {
+        if (selectedFilter === "all") return true;
+        return entry.type === selectedFilter;
+      }),
+    [attendanceData, selectedFilter],
+  );
+
+  const handleRecognized = async (result: RecognitionResult) => {
+    setIsSubmitting(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: result.mode,
+          studentId: result.studentId,
+          cameraLabel:
+            result.mode === "entry" ? "Main Gate Cam" : "Exit Gate Cam",
+          confidence: result.confidence,
+          frameDataUrl: result.frameDataUrl,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        message?: string;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setMessage(data.error ?? "Failed to log attendance.");
+        return;
+      }
+
+      setMessage(`✓ ${result.studentName} — ${result.mode} logged`);
+      await loadAttendance();
+    } catch {
+      setMessage("Failed to log attendance.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <PageContainer gradient="from-blue-50 via-indigo-50 to-purple-50">
@@ -119,6 +154,17 @@ export default function AttendancePage() {
           <p className="text-gray-600">
             AI-powered facial recognition & real-time tracking
           </p>
+          <div className="mt-4 max-w-xs">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2"
+            />
+          </div>
         </motion.div>
 
         {/* Stats Cards - Using StatCard Component */}
@@ -160,6 +206,11 @@ export default function AttendancePage() {
             <CameraFeed
               isActive={recognitionMode}
               onToggle={() => setRecognitionMode(!recognitionMode)}
+              cameraMode={cameraMode}
+              onModeChange={setCameraMode}
+              onRecognized={handleRecognized}
+              isSubmitting={isSubmitting}
+              message={message}
             />
           </motion.div>
 
@@ -170,6 +221,11 @@ export default function AttendancePage() {
             transition={{ delay: 0.6 }}
             className="lg:col-span-2"
           >
+            {isLoading && (
+              <div className="mb-3 text-sm text-gray-600">
+                Loading attendance...
+              </div>
+            )}
             <AttendanceLogTable
               data={filteredData}
               selectedFilter={selectedFilter}

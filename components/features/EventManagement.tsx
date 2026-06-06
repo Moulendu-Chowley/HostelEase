@@ -85,11 +85,24 @@ export const PointsTable: React.FC<PointsTableProps> = ({
 interface CaptainSelectionProps {
   onSelect: () => void;
   isSelecting: boolean;
+  selectedCaptain?: {
+    name: string;
+    year: string;
+    stats: {
+      performance: number;
+      leadership: number;
+      coordination: number;
+      commitment: number;
+      rating: number;
+    };
+    score: number;
+  } | null;
 }
 
 export const CaptainSelection: React.FC<CaptainSelectionProps> = ({
   onSelect,
   isSelecting,
+  selectedCaptain,
 }) => {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6">
@@ -119,9 +132,68 @@ export const CaptainSelection: React.FC<CaptainSelectionProps> = ({
           {isSelecting ? "🔄 Analyzing Dataset..." : "🤖 Auto-Select Captain"}
         </button>
 
+        {selectedCaptain && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="border-2 border-yellow-400 bg-yellow-50/30 rounded-xl p-4 mt-4"
+          >
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider">AI Top Pick</p>
+                <h4 className="text-lg font-bold text-gray-800">{selectedCaptain.name}</h4>
+                <p className="text-xs text-gray-500">{selectedCaptain.year}</p>
+              </div>
+              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black px-3 py-2 rounded-lg text-center shadow">
+                <span className="block text-xs uppercase leading-none font-semibold">Score</span>
+                <span className="text-lg leading-none">{selectedCaptain.score}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-600">Performance</span>
+                  <span className="font-semibold">{selectedCaptain.stats.performance}/10</span>
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500" style={{ width: `${selectedCaptain.stats.performance * 10}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-600">Leadership</span>
+                  <span className="font-semibold">{selectedCaptain.stats.leadership}/10</span>
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500" style={{ width: `${selectedCaptain.stats.leadership * 10}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-600">Coordination</span>
+                  <span className="font-semibold">{selectedCaptain.stats.coordination}/10</span>
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-purple-500" style={{ width: `${selectedCaptain.stats.coordination * 10}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-600">Commitment & Rating</span>
+                  <span className="font-semibold">{selectedCaptain.stats.rating}/10</span>
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-yellow-500" style={{ width: `${selectedCaptain.stats.rating * 10}%` }} />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
           <p className="text-xs text-blue-800">
-            <strong>🔌 ML Integration:</strong> Connect dataset with player
+            <strong>🔌 ML Integration:</strong> Connected dataset with player
             statistics, match history, and performance metrics
           </p>
         </div>
@@ -129,3 +201,4 @@ export const CaptainSelection: React.FC<CaptainSelectionProps> = ({
     </div>
   );
 };
+

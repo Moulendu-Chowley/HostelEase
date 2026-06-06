@@ -1,5 +1,6 @@
 "use client";
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -19,16 +20,67 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [userName, setUserName] = useState("Admin");
+  const [userEmail, setUserEmail] = useState("admin@hostel.com");
+  const [userRole, setUserRole] = useState<"admin" | "student">("student");
   const pathname = usePathname();
+
+  const initials = useMemo(() => {
+    const clean = userName.trim();
+    if (!clean) return "A";
+    return clean
+      .split(" ")
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || "")
+      .join("");
+  }, [userName]);
+
+  useEffect(() => {
+    const syncUser = async () => {
+      const supabase = getSupabaseBrowserClient();
+
+      if (!supabase) {
+        return;
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const role = String(user.user_metadata?.role || "student").toLowerCase();
+      setUserEmail(user.email || "admin@hostel.com");
+      setUserName(String(user.user_metadata?.name || user.email || "Admin"));
+      setUserRole(role === "admin" ? "admin" : "student");
+    };
+
+    void syncUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    const supabase = getSupabaseBrowserClient();
+
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+
+    router.push("/login");
+    router.refresh();
+  };
 
   const menuItems = [
     { id: "overview", icon: Home, label: "Overview", href: "/dashboard" },
@@ -89,6 +141,13 @@ export default function DashboardLayout({
     },
   ];
 
+  const allowedMenuItems =
+    userRole === "admin"
+      ? menuItems
+      : menuItems.filter((item) =>
+          ["overview", "attendance", "leave"].includes(item.id),
+        );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Sidebar */}
@@ -127,7 +186,7 @@ export default function DashboardLayout({
           {/* Navigation */}
           <nav className="flex-1 p-4 overflow-y-auto">
             <ul className="space-y-2">
-              {menuItems.map((item) => {
+              {allowedMenuItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <li key={item.id}>
@@ -162,17 +221,24 @@ export default function DashboardLayout({
               }`}
             >
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
-                A
+                {initials}
               </div>
               {sidebarOpen && (
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-800">Admin</p>
-                  <p className="text-xs text-gray-500">admin@hostel.com</p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {userName}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {userEmail} • {userRole.toUpperCase()}
+                  </p>
                 </div>
               )}
             </div>
             {sidebarOpen && (
-              <button className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+              <button
+                onClick={handleLogout}
+                className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+              >
                 <LogOut className="h-4 w-4" />
                 <span className="text-sm font-medium">Logout</span>
               </button>
@@ -192,7 +258,7 @@ export default function DashboardLayout({
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-              <p className="text-sm text-gray-600">Welcome back, Admin!</p>
+              <p className="text-sm text-gray-600">Welcome back, {userName}!</p>
             </div>
             <div className="flex items-center space-x-4">
               <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">

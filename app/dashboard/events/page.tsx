@@ -3,117 +3,73 @@
 import { CaptainSelection, PointsTable, StatCard } from "@/components";
 import { motion } from "framer-motion";
 import { Award, Calendar, TrendingUp, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function EventsPage() {
   const [selectedSport, setSelectedSport] = useState<"football" | "cricket">(
     "football"
   );
   const [isSelecting, setIsSelecting] = useState(false);
+  const [footballTeams, setFootballTeams] = useState<any[]>([]);
+  const [cricketTeams, setCricketTeams] = useState<any[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [stats, setStats] = useState([
+    { title: "Active Leagues", value: "0", icon: Award, gradient: "from-blue-500 to-indigo-600" },
+    { title: "Total Teams", value: "0", icon: Users, gradient: "from-green-500 to-emerald-600" },
+    { title: "Matches Played", value: "0", icon: TrendingUp, gradient: "from-purple-500 to-pink-600" },
+    { title: "Upcoming Matches", value: "0", icon: Calendar, gradient: "from-orange-500 to-red-600" },
+  ]);
+  const [selectedCaptain, setSelectedCaptain] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const stats = [
-    {
-      title: "Active Leagues",
-      value: "2",
-      icon: Award,
-      gradient: "from-blue-500 to-indigo-600",
-    },
-    {
-      title: "Total Teams",
-      value: "8",
-      icon: Users,
-      gradient: "from-green-500 to-emerald-600",
-    },
-    {
-      title: "Matches Played",
-      value: "24",
-      icon: TrendingUp,
-      gradient: "from-purple-500 to-pink-600",
-    },
-    {
-      title: "Upcoming Matches",
-      value: "12",
-      icon: Calendar,
-      gradient: "from-orange-500 to-red-600",
-    },
-  ];
-
-  const footballTeams = [
-    {
-      id: 1,
-      name: "Thunder FC",
-      captain: "Rahul Sharma",
-      wins: 5,
-      losses: 1,
-      points: 15,
-    },
-    {
-      id: 2,
-      name: "Phoenix United",
-      captain: "Amit Kumar",
-      wins: 4,
-      losses: 2,
-      points: 12,
-    },
-    {
-      id: 3,
-      name: "Warriors XI",
-      captain: "Karthik Reddy",
-      wins: 3,
-      losses: 3,
-      points: 9,
-    },
-    {
-      id: 4,
-      name: "Eagles FC",
-      captain: "Sanjay Patel",
-      wins: 0,
-      losses: 6,
-      points: 0,
-    },
-  ];
-
-  const cricketTeams = [
-    {
-      id: 1,
-      name: "Royal Strikers",
-      captain: "Priya Singh",
-      wins: 6,
-      losses: 0,
-      points: 18,
-    },
-    {
-      id: 2,
-      name: "Super Kings",
-      captain: "Sneha Patel",
-      wins: 4,
-      losses: 2,
-      points: 12,
-    },
-    {
-      id: 3,
-      name: "Knight Riders",
-      captain: "Arun Verma",
-      wins: 2,
-      losses: 4,
-      points: 6,
-    },
-    {
-      id: 4,
-      name: "Challengers",
-      captain: "Ravi Gupta",
-      wins: 0,
-      losses: 6,
-      points: 0,
-    },
-  ];
-
-  const handleSelectCaptain = () => {
-    setIsSelecting(true);
-    setTimeout(() => {
-      setIsSelecting(false);
-    }, 2000);
+  const fetchEventsData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/events");
+      const data = await res.json();
+      if (res.ok) {
+        setFootballTeams(data.footballTeams || []);
+        setCricketTeams(data.cricketTeams || []);
+        setMatches(data.matches || []);
+        
+        if (data.stats) {
+          setStats([
+            { title: "Active Leagues", value: String(data.stats.activeLeagues), icon: Award, gradient: "from-blue-500 to-indigo-600" },
+            { title: "Total Teams", value: String(data.stats.totalTeams), icon: Users, gradient: "from-green-500 to-emerald-600" },
+            { title: "Matches Played", value: String(data.stats.matchesPlayed), icon: TrendingUp, gradient: "from-purple-500 to-pink-600" },
+            { title: "Upcoming Matches", value: String(data.stats.upcomingMatches), icon: Calendar, gradient: "from-orange-500 to-red-600" },
+          ]);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch events data", e);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    void fetchEventsData();
+  }, []);
+
+  const handleSelectCaptain = async () => {
+    setIsSelecting(true);
+    try {
+      const res = await fetch("/api/events", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedCaptain(data.captain);
+        alert(data.message || "Captain selected successfully!");
+      } else {
+        alert(data.error || "Failed to select captain.");
+      }
+    } catch {
+      alert("Failed to select captain.");
+    } finally {
+      setIsSelecting(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
@@ -200,6 +156,7 @@ export default function EventsPage() {
             <CaptainSelection
               onSelect={handleSelectCaptain}
               isSelecting={isSelecting}
+              selectedCaptain={selectedCaptain}
             />
           </motion.div>
         </div>
@@ -215,55 +172,30 @@ export default function EventsPage() {
             Upcoming Matches
           </h2>
           <div className="space-y-4">
-            {[
-              {
-                team1: "Warriors",
-                team2: "Titans",
-                date: "Dec 10, 2025",
-                time: "4:00 PM",
-                venue: "Ground A",
-              },
-              {
-                team1: "Spartans",
-                team2: "Phoenix",
-                date: "Dec 11, 2025",
-                time: "5:00 PM",
-                venue: "Ground B",
-              },
-              {
-                team1: "Warriors",
-                team2: "Phoenix",
-                date: "Dec 13, 2025",
-                time: "4:00 PM",
-                venue: "Ground A",
-              },
-              {
-                team1: "Titans",
-                team2: "Spartans",
-                date: "Dec 14, 2025",
-                time: "5:00 PM",
-                venue: "Ground B",
-              },
-            ].map((match, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:shadow-md transition"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <p className="font-semibold text-gray-800">{match.team1}</p>
-                    <p className="text-xs text-gray-500">vs</p>
-                    <p className="font-semibold text-gray-800">{match.team2}</p>
+            {matches.length === 0 ? (
+              <p className="text-gray-500 text-sm">No upcoming fixtures scheduled.</p>
+            ) : (
+              matches.map((match, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:shadow-md transition"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="font-semibold text-gray-800">{match.team1}</p>
+                      <p className="text-xs text-gray-500">vs</p>
+                      <p className="font-semibold text-gray-800">{match.team2}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-700">{match.date}</p>
+                    <p className="text-sm text-gray-600">
+                      {match.time} • {match.venue}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-700">{match.date}</p>
-                  <p className="text-sm text-gray-600">
-                    {match.time} • {match.venue}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </motion.div>
 

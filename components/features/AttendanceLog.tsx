@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import React from "react";
 
 interface AttendanceEntry {
-  id: number;
+  id: string | number;
   name: string;
   rollNo: string;
   time: string;

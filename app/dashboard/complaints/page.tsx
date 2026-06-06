@@ -1,5 +1,6 @@
 "use client";
 
+import { Button, Input, Modal } from "@/components";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -13,74 +14,111 @@ import {
   User,
   Wrench,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type Complaint = {
+  id: string;
+  title: string;
+  description: string;
+  student: string;
+  room: string;
+  category: string;
+  priority: "low" | "medium" | "high" | "critical";
+  status: "pending" | "in-progress" | "resolved";
+  date: string;
+  time: string;
+};
 
 export default function ComplaintsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const complaints = [
-    {
-      id: 1,
-      title: "AC Not Working",
-      description: "The air conditioning in my room has stopped working",
-      student: "John Doe",
-      room: "101",
-      category: "Electrical",
-      priority: "high",
-      status: "pending",
-      date: "2025-12-05",
-      time: "10:30 AM",
-    },
-    {
-      id: 2,
-      title: "Water Leakage",
-      description: "There is water leaking from the bathroom ceiling",
-      student: "Jane Smith",
-      room: "102",
-      category: "Plumbing",
-      priority: "critical",
-      status: "in-progress",
-      date: "2025-12-06",
-      time: "2:15 PM",
-    },
-    {
-      id: 3,
-      title: "Broken Window",
-      description: "Window glass is cracked and needs replacement",
-      student: "Mike Johnson",
-      room: "201",
-      category: "General",
-      priority: "medium",
-      status: "resolved",
-      date: "2025-12-03",
-      time: "9:00 AM",
-    },
-    {
-      id: 4,
-      title: "WiFi Connection Issues",
-      description: "Internet connection is very slow and keeps disconnecting",
-      student: "Sarah Williams",
-      room: "203",
-      category: "Network",
-      priority: "medium",
-      status: "pending",
-      date: "2025-12-07",
-      time: "11:45 AM",
-    },
-    {
-      id: 5,
-      title: "Door Lock Broken",
-      description: "Room door lock is not working properly",
-      student: "Tom Brown",
-      room: "301",
-      category: "Security",
-      priority: "high",
-      status: "in-progress",
-      date: "2025-12-06",
-      time: "4:30 PM",
-    },
-  ];
+  // Form states
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newCategory, setNewCategory] = useState("Electrical");
+  const [newPriority, setNewPriority] = useState("medium");
+
+  const fetchComplaints = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/complaints");
+      const data = await res.json();
+      if (res.ok) {
+        setComplaints(data.complaints || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch complaints", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchComplaints();
+  }, []);
+
+  const handleAddComplaint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/complaints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle,
+          description: newDescription,
+          category: newCategory,
+          priority: newPriority,
+        }),
+      });
+
+      if (res.ok) {
+        setShowAddModal(false);
+        setNewTitle("");
+        setNewDescription("");
+        setNewCategory("Electrical");
+        setNewPriority("medium");
+        await fetchComplaints();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to log complaint.");
+      }
+    } catch {
+      alert("Failed to log complaint.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusProgress = async (id: string, currentStatus: string) => {
+    let nextStatus = "pending";
+    if (currentStatus === "pending") nextStatus = "in-progress";
+    else if (currentStatus === "in-progress") nextStatus = "resolved";
+    else return;
+
+    try {
+      const res = await fetch("/api/complaints", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: nextStatus }),
+      });
+
+      if (res.ok) {
+        await fetchComplaints();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to update complaint status.");
+      }
+    } catch {
+      alert("Failed to update complaint status.");
+    }
+  };
 
   const filteredComplaints = complaints.filter((complaint) => {
     const matchesSearch =
@@ -246,98 +284,104 @@ export default function ComplaintsPage() {
       </div>
 
       {/* Complaints Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredComplaints.map((complaint, index) => (
-          <motion.div
-            key={complaint.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-          >
-            <div
-              className={`h-1 ${
-                complaint.priority === "critical"
-                  ? "bg-red-500"
-                  : complaint.priority === "high"
-                  ? "bg-orange-500"
-                  : complaint.priority === "medium"
-                  ? "bg-yellow-500"
-                  : "bg-blue-500"
-              }`}
-            />
+      {isLoading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Loading complaints register...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredComplaints.map((complaint, index) => (
+            <motion.div
+              key={complaint.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+            >
+              <div
+                className={`h-1 ${
+                  complaint.priority === "critical"
+                    ? "bg-red-500"
+                    : complaint.priority === "high"
+                    ? "bg-orange-500"
+                    : complaint.priority === "medium"
+                    ? "bg-yellow-500"
+                    : "bg-blue-500"
+                }`}
+              />
 
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    {complaint.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3">
-                    {complaint.description}
-                  </p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(
-                    complaint.priority
-                  )}`}
-                >
-                  {complaint.priority.toUpperCase()}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{complaint.student}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Building2 className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Room {complaint.room}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{complaint.date}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <MessageSquare className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{complaint.category}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <div
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg ${getStatusColor(
-                    complaint.status
-                  )}`}
-                >
-                  {getStatusIcon(complaint.status)}
-                  <span className="text-sm font-semibold">
-                    {complaint.status
-                      .split("-")
-                      .map(
-                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                      )
-                      .join(" ")}
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                      {complaint.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3">
+                      {complaint.description}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${getPriorityColor(
+                      complaint.priority
+                    )}`}
+                  >
+                    {complaint.priority}
                   </span>
                 </div>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm">
-                    View Details
-                  </button>
-                  {complaint.status !== "resolved" && (
-                    <button className="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors font-medium text-sm">
-                      Update Status
-                    </button>
-                  )}
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">{complaint.student}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Room {complaint.room}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">{complaint.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <MessageSquare className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">{complaint.category}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg ${getStatusColor(
+                      complaint.status
+                    )}`}
+                  >
+                    {getStatusIcon(complaint.status)}
+                    <span className="text-sm font-semibold">
+                      {complaint.status
+                        .split("-")
+                        .map(
+                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(" ")}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    {complaint.status !== "resolved" && (
+                      <button
+                        onClick={() => handleStatusProgress(complaint.id, complaint.status)}
+                        className="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors font-medium text-sm"
+                      >
+                        {complaint.status === "pending" ? "Start Fix" : "Mark Resolved"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-      {filteredComplaints.length === 0 && (
+      {filteredComplaints.length === 0 && !isLoading && (
         <div className="text-center py-12 bg-white rounded-xl shadow-lg">
           <AlertCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">
@@ -350,11 +394,89 @@ export default function ComplaintsPage() {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        onClick={() => setShowAddModal(true)}
         className="fixed bottom-8 right-8 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl flex items-center gap-2 font-semibold hover:shadow-blue-500/50"
       >
         <Plus className="h-6 w-6" />
         New Complaint
       </motion.button>
+
+      {/* Add Complaint Modal */}
+      {showAddModal && (
+        <Modal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          title="File a New Complaint"
+        >
+          <form onSubmit={handleAddComplaint} className="space-y-4">
+            <Input
+              label="Issue Title"
+              type="text"
+              placeholder="e.g. WiFi broken"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              required
+            />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Detailed Description
+              </label>
+              <textarea
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+                placeholder="Describe the issue in detail..."
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="Electrical">Electrical</option>
+                <option value="Plumbing">Plumbing</option>
+                <option value="Network">Network</option>
+                <option value="Security">Security</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Priority
+              </label>
+              <select
+                value={newPriority}
+                onChange={(e) => setNewPriority(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3 mt-6 pt-4 border-t">
+              <Button type="submit" variant="primary" disabled={isSubmitting}>
+                {isSubmitting ? "Filing..." : "File Complaint"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
