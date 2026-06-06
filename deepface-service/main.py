@@ -7,8 +7,14 @@ Requires: pip install -r requirements.txt
 import base64
 import io
 import os
+import sys
 import tempfile
 from pathlib import Path
+
+# Force stdout/stderr to use UTF-8 on Windows to prevent charmap UnicodeEncodeError
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 import uvicorn
 from deepface import DeepFace
@@ -127,11 +133,15 @@ def recognize(body: RecognizeRequest):
                     enforce_detection=False,  # don't crash if no face detected
                 )
                 distance = float(result["distance"])
+                print(f"DEBUG: Verifying against {face_file.name}: distance={distance:.4f}, threshold={THRESHOLD:.4f}")
                 if distance < best_distance:
                     best_distance = distance
                     best_student_id = face_file.stem  # filename without .jpg == student UUID
-            except Exception:
-                continue  # skip unreadable or undetectable images
+            except Exception as e:
+                print(f"DEBUG ERROR: Failed verifying against {face_file.name}: {str(e)}")
+                continue
+
+        print(f"DEBUG RESULT: Best match student={best_student_id}, distance={best_distance:.4f} (threshold={THRESHOLD:.4f})")
 
         if best_student_id and best_distance <= THRESHOLD:
             # Map distance to a [0.5, 0.99] confidence score
@@ -142,7 +152,7 @@ def recognize(body: RecognizeRequest):
                 confidence=min(confidence, 0.99),
             )
 
-        return RecognizeResponse(matched=False, message="No match found")
+        return RecognizeResponse(matched=False, message=f"No match found. Best distance was {best_distance:.4f} (threshold is {THRESHOLD:.4f})")
 
     finally:
         tmp_path.unlink(missing_ok=True)
