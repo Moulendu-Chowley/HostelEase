@@ -76,13 +76,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { error: profileError } = await adminClient.from("profiles").insert({
-      user_id: created.user.id,
-      email,
-      full_name: fullName,
-      role,
-      roll_no: rollNo,
-    });
+    const { error: profileError } = await adminClient.from("profiles").upsert(
+      {
+        user_id: created.user.id,
+        email,
+        full_name: fullName,
+        role,
+        roll_no: rollNo,
+      },
+      { onConflict: "email" },
+    );
 
     if (profileError) {
       throw new Error(profileError.message);

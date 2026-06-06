@@ -25,11 +25,6 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const role = user.user_metadata?.role as string | undefined;
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   const { studentId } = await params;
   const body = (await request.json()) as { image_b64: string };
 
@@ -39,6 +34,20 @@ export async function PUT(
       { error: "Admin client not configured" },
       { status: 500 },
     );
+  }
+
+  const role = String(user.user_metadata?.role || "student").toLowerCase();
+  if (role !== "admin") {
+    // If not admin, verify this is the student's own profile
+    const { data: profile, error: pErr } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (pErr || !profile || profile.id !== studentId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   // 1. Upload photo to Supabase Storage
@@ -56,16 +65,30 @@ export async function PUT(
       upsert: true,
     });
 
-  if (!uploadError) {
-    const { data: urlData } = adminClient.storage
-      .from("student-photos")
-      .getPublicUrl(`${studentId}.jpg`);
-    photoUrl = urlData.publicUrl;
+  if (uploadError) {
+    console.error("Supabase Storage upload error:", uploadError);
+    return NextResponse.json(
+      { error: `Storage upload failed: ${uploadError.message}` },
+      { status: 500 },
+    );
+  }
 
-    await adminClient
-      .from("profiles")
-      .update({ photo_url: photoUrl })
-      .eq("id", studentId);
+  const { data: urlData } = adminClient.storage
+    .from("student-photos")
+    .getPublicUrl(`${studentId}.jpg`);
+  photoUrl = urlData.publicUrl;
+
+  const { error: updateProfileError } = await adminClient
+    .from("profiles")
+    .update({ photo_url: photoUrl })
+    .eq("id", studentId);
+
+  if (updateProfileError) {
+    console.error("Profile update error:", updateProfileError);
+    return NextResponse.json(
+      { error: `Database profile update failed: ${updateProfileError.message}` },
+      { status: 500 },
+    );
   }
 
   // 2. Register face with DeepFace service
@@ -120,11 +143,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const role = user.user_metadata?.role as string | undefined;
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   const { studentId } = await params;
 
   const adminClient = createSupabaseAdminClient();
@@ -133,6 +151,20 @@ export async function DELETE(
       { error: "Admin client not configured" },
       { status: 500 },
     );
+  }
+
+  const role = String(user.user_metadata?.role || "student").toLowerCase();
+  if (role !== "admin") {
+    // If not admin, verify this is the student's own profile
+    const { data: profile, error: pErr } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (pErr || !profile || profile.id !== studentId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   // Remove from Supabase Storage

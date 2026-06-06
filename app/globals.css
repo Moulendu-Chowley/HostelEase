@@ -57,3 +57,18 @@ body {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+/* Ensure input text is dark and visible on white backgrounds, especially in dark mode */
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9ca3af !important;
+}

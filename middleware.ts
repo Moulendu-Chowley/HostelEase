@@ -48,9 +48,18 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (!authError) {
+      user = authUser;
+    }
+  } catch (err) {
+    console.warn("Middleware: auth check fetch failed, treating as unauthenticated.", err);
+  }
 
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
   const isLoginRoute = request.nextUrl.pathname === "/login";
