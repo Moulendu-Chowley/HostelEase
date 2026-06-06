@@ -31,7 +31,7 @@ FACES_DIR.mkdir(parents=True, exist_ok=True)
 
 MODEL_NAME = "ArcFace"          # Fast and accurate
 DISTANCE_METRIC = "cosine"
-THRESHOLD = float(os.getenv("RECOGNITION_THRESHOLD", "0.65"))
+THRESHOLD = float(os.getenv("RECOGNITION_THRESHOLD", "0.40"))
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -127,12 +127,10 @@ def recognize(body: RecognizeRequest):
                     enforce_detection=False,  # don't crash if no face detected
                 )
                 distance = float(result["distance"])
-                print(f"DEBUG: Comparing with student {face_file.stem}: distance = {distance:.4f} (threshold = {THRESHOLD:.2f})")
                 if distance < best_distance:
                     best_distance = distance
                     best_student_id = face_file.stem  # filename without .jpg == student UUID
-            except Exception as e:
-                print(f"DEBUG: Error comparing with {face_file.name}: {e}")
+            except Exception:
                 continue  # skip unreadable or undetectable images
 
         if best_student_id and best_distance <= THRESHOLD:
