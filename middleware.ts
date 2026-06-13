@@ -4,13 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const adminOnlyRoutes = [
   "/dashboard/rooms",
-  "/dashboard/allotment",
   "/dashboard/students",
   "/dashboard/mess",
-  "/dashboard/events",
-  "/dashboard/budget",
-  "/dashboard/complaints",
   "/dashboard/settings",
+  "/dashboard/warden-ai",
+  "/dashboard/inventory",
 ];
 
 export async function middleware(request: NextRequest) {

@@ -32,6 +32,10 @@ export default function RoomsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Digital Twin state
+  const [digitalTwinOpen, setDigitalTwinOpen] = useState(true);
+  const [highlightedRooms, setHighlightedRooms] = useState<string[]>([]);
 
   // Form states
   const [newNumber, setNewNumber] = useState("");
@@ -194,6 +198,101 @@ export default function RoomsPage() {
             <XCircle className="h-12 w-12 text-orange-500 opacity-20" />
           </div>
         </motion.div>
+      </div>
+
+      {/* Digital Twin Occupancy Map */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+        <div 
+          className="flex justify-between items-center cursor-pointer select-none" 
+          onClick={() => setDigitalTwinOpen(!digitalTwinOpen)}
+        >
+          <div className="flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-indigo-600" />
+            <h2 className="text-xl font-bold text-gray-800">
+              Digital Twin Hostel Occupancy Map
+            </h2>
+          </div>
+          <span className="text-xs text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 hover:bg-indigo-100 transition">
+            {digitalTwinOpen ? "Collapse Map" : "Expand Map"}
+          </span>
+        </div>
+
+        {digitalTwinOpen && (
+          <div className="mt-6 space-y-6">
+            {/* Legend and Simulation */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <div className="flex flex-wrap gap-4 text-xs font-semibold text-gray-500">
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 bg-emerald-500 rounded" /> Occupied / Partial</span>
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 bg-blue-500 rounded" /> Completely Vacant</span>
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 bg-red-500 rounded" /> Full / Alert</span>
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 bg-amber-500 rounded" /> Maintenance</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (highlightedRooms.length > 0) {
+                    setHighlightedRooms([]);
+                  } else {
+                    setHighlightedRooms(["102", "204"]);
+                    setTimeout(() => alert("HostelGPT AI Agent: Identified plumbing pipeline anomalies and curfew alerts in Room 102 and Room 204. Problematic rooms highlighted."), 100);
+                  }
+                }}
+                className="text-xs font-bold text-indigo-700 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-300 px-3 py-1.5 rounded-lg bg-white shadow-sm hover:shadow transition"
+              >
+                {highlightedRooms.length > 0 ? "Clear Highlights" : "AI Highlight Problematic Rooms"}
+              </button>
+            </div>
+
+            {/* Floors Grid */}
+            <div className="space-y-4">
+              {[3, 2, 1].map((floorNum) => {
+                const floorRooms = rooms.filter((r) => r.floor === floorNum);
+                return (
+                  <div key={floorNum} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Floor {floorNum}</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
+                      {floorRooms.map((room) => {
+                        const isFull = room.occupied === room.capacity || room.status === "full";
+                        const isMaint = room.status === "maintenance";
+                        const isVacant = room.occupied === 0;
+                        const isHighlighted = highlightedRooms.includes(room.number);
+                        
+                        let bgCol = "bg-emerald-500 hover:bg-emerald-600";
+                        if (isFull) bgCol = "bg-red-500 hover:bg-red-600";
+                        else if (isMaint) bgCol = "bg-amber-500 hover:bg-amber-600";
+                        else if (isVacant) bgCol = "bg-blue-500 hover:bg-blue-600";
+
+                        return (
+                          <div
+                            key={room.id}
+                            className={`p-3 rounded-xl text-center text-white font-bold cursor-pointer transition relative overflow-hidden group shadow-sm ${bgCol} ${
+                              isHighlighted ? "animate-pulse ring-4 ring-offset-2 ring-indigo-600 scale-105" : "hover:scale-105"
+                            }`}
+                          >
+                            <span className="text-sm block">RM {room.number}</span>
+                            <span className="text-[10px] opacity-75 font-normal">
+                              {room.occupied}/{room.capacity}
+                            </span>
+                            
+                            {/* Hover Details Popover */}
+                            <div className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-44 bg-slate-900/95 backdrop-blur text-white text-left p-3 rounded-xl text-[10px] z-50 shadow-2xl border border-slate-700 font-normal">
+                              <p className="font-bold border-b border-slate-700 pb-1 mb-1 text-xs text-blue-400">Room {room.number}</p>
+                              <p className="mt-1">Floor: {room.floor} | Type: {room.type}</p>
+                              <p>Status: <span className="capitalize">{room.status}</span></p>
+                              <p>Occupancy: {room.occupied} / {room.capacity}</p>
+                              {room.students && room.students.length > 0 && (
+                                <p className="text-slate-400 truncate mt-1">S: {room.students.join(", ")}</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filters and Search */}

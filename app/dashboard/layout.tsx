@@ -4,8 +4,11 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
+  AlertTriangle,
+  Archive,
   Bed,
   Bell,
+  Bot,
   Building2,
   Calendar,
   ClipboardList,
@@ -14,6 +17,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  ShieldAlert,
   TrendingUp,
   UserCheck,
   Users,
@@ -85,6 +89,12 @@ export default function DashboardLayout({
   const menuItems = [
     { id: "overview", icon: Home, label: "Overview", href: "/dashboard" },
     {
+      id: "warden-ai",
+      icon: ShieldAlert,
+      label: "Digital Warden",
+      href: "/dashboard/warden-ai",
+    },
+    {
       id: "attendance",
       icon: UserCheck,
       label: "Attendance",
@@ -134,6 +144,24 @@ export default function DashboardLayout({
       href: "/dashboard/complaints",
     },
     {
+      id: "inventory",
+      icon: Archive,
+      label: "Inventory",
+      href: "/dashboard/inventory",
+    },
+    {
+      id: "emergency",
+      icon: AlertTriangle,
+      label: "SOS Emergency",
+      href: "/dashboard/emergency",
+    },
+    {
+      id: "hostelgpt",
+      icon: Bot,
+      label: "HostelGPT AI",
+      href: "/dashboard/hostelgpt",
+    },
+    {
       id: "settings",
       icon: Settings,
       label: "Settings",
@@ -145,7 +173,17 @@ export default function DashboardLayout({
     userRole === "admin"
       ? menuItems
       : menuItems.filter((item) =>
-          ["overview", "attendance", "leave"].includes(item.id),
+          [
+            "overview",
+            "attendance",
+            "allotment",
+            "leave",
+            "events",
+            "budget",
+            "complaints",
+            "emergency",
+            "hostelgpt",
+          ].includes(item.id),
         );
 
   return (

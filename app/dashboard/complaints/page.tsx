@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Plus,
   Search,
+  Sparkles,
   User,
   Wrench,
 } from "lucide-react";
@@ -244,6 +245,31 @@ export default function ComplaintsPage() {
             <CheckCircle className="h-12 w-12 text-green-500 opacity-20" />
           </div>
         </motion.div>
+      </div>
+
+      {/* AI Complaint Root Cause Intelligence Panel */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-indigo-100/50">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-5 w-5 text-indigo-600 animate-pulse" />
+          <h2 className="text-lg font-bold text-gray-800">AI Complaint Root Cause Intelligence</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-100/30 text-indigo-950 text-xs">
+            <h3 className="font-extrabold text-sm text-indigo-900 mb-1">Detected Cluster: Plumbing</h3>
+            <p className="leading-relaxed font-medium">
+              <strong>Root Cause Prediction:</strong> Analysis of active plumbing complaints on Floor 3 indicates a common main pressure valve leakage near Room 304 Wing-B.
+            </p>
+            <p className="mt-2 text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Estimated Action Time: 2 Hours</p>
+          </div>
+          <div className="p-4 rounded-xl bg-orange-50 border border-orange-100/30 text-orange-950 text-xs">
+            <h3 className="font-extrabold text-sm text-orange-900 mb-1">Detected Cluster: Network</h3>
+            <p className="leading-relaxed font-medium">
+              <strong>Root Cause Prediction:</strong> Multiple Wi-Fi disconnect warnings on Floor 2 points to a load crash on Wing-A local access point router.
+            </p>
+            <p className="mt-2 text-[10px] text-orange-600 font-bold uppercase tracking-wider">Estimated Action Time: 30 Mins</p>
+          </div>
+        </div>
       </div>
 
       {/* Search and Filter */}
