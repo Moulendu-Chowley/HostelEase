@@ -1,149 +1,166 @@
-# HostelEase - Smart Hostel Management System
+# 🏨 HostelEase - Smart Hostel Operations & AI Warden Platform
 
-A modern, interactive web application built with Next.js 14 for comprehensive hostel management.
+A comprehensive, modern, AI-powered smart hostel operations platform and digital warden system designed to streamline residential management, security, and student living.
 
-## 🚀 Features
-
-- **Interactive Dashboard** - Real-time overview of hostel operations
-- **Room Management** - Smart room allocation and availability tracking
-- **Student Portal** - Comprehensive dashboard for students
-- **Visitor Management** - Track and manage visitor check-ins
-- **Complaint System** - Submit and track maintenance requests
-- **Attendance Tracking** - Automated attendance management
-- **Reports & Analytics** - Powerful insights and data visualization
-- **Responsive Design** - Works seamlessly on all devices
-
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Charts**: Recharts
-
-## 📦 Installation
-
-1. **Install dependencies**:
-
-```bash
-npm install
-```
-
-2. **Run the development server**:
-
-```bash
-npm run dev
-```
-
-3. **Open your browser** and navigate to `http://localhost:3000`
-
-## 🎨 Project Structure
-
-```
-hostel-management-system/
-├── app/
-│   ├── layout.tsx          # Root layout
-│   ├── page.tsx            # Landing page
-│   ├── globals.css         # Global styles
-│   ├── dashboard/          # Dashboard pages
-│   │   └── page.tsx
-│   └── login/              # Authentication
-│       └── page.tsx
-├── components/             # Reusable components (to be added)
-├── public/                 # Static assets
-└── package.json
-```
-
-## 🔑 Key Pages
-
-- **Landing Page** (`/`) - Feature showcase and introduction
-- **Login** (`/login`) - Authentication for students and admins
-- **Dashboard** (`/dashboard`) - Main control panel with stats and activities
-
-## 🎯 Features in Detail
-
-### Dashboard
-
-- Real-time statistics
-- Recent activity feed
-- Upcoming events calendar
-- Quick action buttons
-- Interactive sidebar navigation
-
-### Landing Page
-
-- Animated hero section
-- Feature cards with hover effects
-- Statistics showcase
-- Responsive navigation
-- Call-to-action sections
-
-### Login System
-
-- Role-based authentication (Student/Admin)
-- Social login integration (Google, GitHub)
-- Password visibility toggle
-- Remember me functionality
-
-## 🎨 Design Features
-
-- Gradient backgrounds
-- Smooth animations with Framer Motion
-- Glassmorphism effects
-- Interactive hover states
-- Mobile-responsive layouts
-- Custom scrollbars
-- Modern card designs
-
-## 📱 Responsive Design
-
-The application is fully responsive and optimized for:
-
-- Desktop (1920px+)
-- Laptop (1024px - 1919px)
-- Tablet (768px - 1023px)
-- Mobile (320px - 767px)
-
-## 🔐 Security Features
-
-- Role-based access control
-- Secure authentication
-- Password encryption (to be implemented)
-- Session management (to be implemented)
-
-## 🚀 Deployment
-
-To build for production:
-
-```bash
-npm run build
-npm start
-```
-
-## 📝 Future Enhancements
-
-- [ ] Backend integration with API
-- [ ] Database connection
-- [ ] Real-time notifications
-- [ ] Email notifications
-- [ ] Payment integration
-- [ ] Advanced reporting
-- [ ] Mobile app version
-- [ ] Multi-language support
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 👥 Support
-
-For support, email admin@hostelease.com or create an issue in the repository.
+Built using **Next.js 15 (App Router)**, **Supabase (PostgreSQL & Auth)**, and a **FastAPI-powered DeepFace Facial Recognition Service**, HostelEase automates everything from gate attendance to roommate compatibility and predictive maintenance.
 
 ---
 
-Made with ❤️ using Next.js and TypeScript
+## 🛠️ Complete Tech Stack & Architecture
+
+HostelEase is structured as a decoupled web application utilizing state-of-the-art developer tooling and AI services:
+
+### 1. Frontend Core
+*   **Framework:** [Next.js 15.1.9 (App Router)](https://nextjs.org/) – Leverages React 19, Server Components, and client-side layouts for fast, modular performance.
+*   **Language:** [TypeScript](https://www.typescriptlang.org/) – Strict typing ensures compile-time safety across all dashboard views.
+*   **Styling:** [Tailwind CSS 3](https://tailwindcss.com/) – Utilizes a modern, responsive design system featuring smooth color palettes and glassmorphism.
+*   **Animations:** [Framer Motion](https://www.framer.com/motion/) – Provides fluid transitions, sidebar expanding effects, list re-ordering, and micro-interactions.
+*   **Data Visualization:** [Recharts](https://recharts.org/) – Renders interactive charts for monthly budget trends, utility projections, and complaint analytics.
+
+### 2. Backend & Database (Supabase)
+*   **Database:** [PostgreSQL via Supabase](https://supabase.com/) – Uses a relational schema with 11+ tables (Students, Rooms, Allotments, Attendance Logs, Leave Records, Complaints, Assets, Emergency Logs, and Mess Committees) configured with Referential Integrity.
+*   **Authentication:** [Supabase Auth](https://supabase.com/docs/guides/auth) – Secure token-based user sessions with customized user metadata to implement role-based access control (`student` vs `admin`).
+*   **Storage:** [Supabase Storage](https://supabase.com/docs/guides/storage) – Dedicated `student-photos` bucket storing high-resolution face profiles for model comparison.
+*   **Route Protection:** Custom Next.js middleware evaluating active user roles to block unauthorized dashboard access dynamically.
+
+### 3. AI Facial Recognition Microservice
+*   **Microservice Framework:** [FastAPI](https://fastapi.tiangolo.com/) – Lightweight Python API hosting deep learning verification models, running on `http://localhost:8000`.
+*   **Deep Learning Model:** [DeepFace](https://github.com/serengil/deepface) – Uses the pre-trained **ArcFace** model with a **Cosine distance metric** for real-time verification at the gate scanner.
+
+---
+
+## 🚀 Interactive Features in Detail
+
+HostelEase goes far beyond standard CRUD operations, incorporating advanced intelligence features:
+
+### 1. HostelGPT AI Operations Agent
+An interactive assistant (`/dashboard/hostelgpt`) that acts as a command console. Students and wardens can chat naturally to execute operations.
+*   **Action Execution:** Wardens can run commands directly via chat, such as *"Allocate Room 102 to Rahul Sharma"* or *"Escalate plumbing complaints on Floor 3"*.
+*   **Rich Visual Cards:** Chat replies dynamically display widgets such as list of vacant rooms, current mess duties, curfew absentees, or budget forecasts based on database status.
+
+### 2. Digital Warden AI Dashboard
+A dedicated dashboard for administrators (`/dashboard/warden-ai`) providing complete operations intelligence:
+*   **Daily AI Summary:** A synthesized briefing highlighting curfew violations, unresolved critical complaints, and pending leaves.
+*   **AI Operations Insights:** Intelligent suggestions generated by analyzing trends (e.g. *"Water line complaints increased on Wing B; suggest check-up"*).
+*   **Security Telemetry Tracker:** Tracks unknown face detections, night exit logs, and curfew violations (entries after 10 PM) detected by the gate camera.
+
+### 3. Digital Twin Occupancy Map
+Visualizes the hostel's layout interactively on the Room Management page (`/dashboard/rooms`):
+*   **Color-Coded Statuses:** Rooms are color-coded as **Green** (Fully Occupied), **Blue** (Vacant / Partially Vacant), **Yellow** (Under Maintenance), or **Red** (Has active critical complaint).
+*   **Interactive Highlight:** Asking HostelGPT to "Show problematic rooms" visually highlights red and yellow rooms on the map.
+
+### 4. Hostel Health Score Widget
+A live daily performance indicator (0-100 score) integrated on the dashboard homepage:
+*   Calculates a composite health metric based on active security alerts, pending complaint turnaround times, curfew violations, and mess attendance levels.
+
+### 5. Complaint Root Cause Intelligence Engine
+Triage engine for the student complaint board (`/dashboard/complaints`):
+*   Automatically groups and clusters complaints. If multiple students report low pressure or leaks on a specific wing, the system flags a common root cause (e.g. *"Suggested Root Cause: Main Pipe Leakage in Floor 3 Wing A"*), allowing wardens to assign one repair team to solve all related tickets.
+
+### 6. Smart Roommate Compatibility Matching
+Provides an onboarding experience to optimize co-living compatibility (`/dashboard/allotment`):
+*   Students fill out a roommate matching profile specifying sleep schedule, study habits, academic year, and hobbies.
+*   The matching engine calculates compatibility scores (0-100%) and highlights top pairings with visual badges on the allotment portal.
+
+### 7. AI Mess Menu & Recommendation Planner
+Optimizes dining halls on the Mess Management panel (`/dashboard/mess`):
+*   Recommends food menus and grocery purchase options based on historical student rating feedback, budget targets, and current ingredient inventory levels.
+
+### 8. Predictive Maintenance Forecasting
+Forecasts potential failures of hostel assets (projectors, water coolers, ceiling fans) based on age, service logs, and usage.
+*   Renders warning flags on the Warden Dashboard (e.g. *"Water Cooler 2 has a high failure probability; scheduling inspection recommended within 5 days"*).
+
+### 9. Automatic Report Generator
+An administrative export engine enabling the warden to download full Monthly Operations Reports:
+*   Generates and packages occupancy summaries, attendance statistics, financial balance sheets, and complaint response times into clean, downloadable formats.
+
+### 10. SOS Emergency Alert Console
+A secure emergency pipeline (`/dashboard/emergency`):
+*   Students can trigger a real-time SOS alert.
+*   Warden Dashboard sounds a visual alarm, details the student's room, and initiates a multi-step emergency response log.
+
+---
+
+## 🔑 Role-Based Access Reference
+
+| Route Path | Admin (Warden) Access | Student Access | Page Description & Behavior |
+| :--- | :---: | :---: | :--- |
+| `/` | ✅ | ✅ | Public Landing Page featuring system details and CTA. |
+| `/login` | ✅ | ✅ | Supabase Auth login portal. |
+| `/signup` | ✅ | ✅ | Registration portal with Role selector (`student` or `admin`). |
+| `/dashboard` | ✅ | ✅ | Main workspace containing the Hostel Health Score and recent logs. |
+| `/dashboard/warden-ai` | ✅ | ❌ | **Digital Warden:** Live telemetry, curfew logs, and predictive alerts. |
+| `/dashboard/attendance` | ✅ | ✅ | **Gate Scanner:** Admin initiates live camera stream; Student views logs. |
+| `/dashboard/rooms` | ✅ | ❌ | **Digital Twin Map:** Visual layout representing occupancy grids. |
+| `/dashboard/allotment` | ✅ | ❌ | **Room Allocator:** Compatibility badges and pair confirmations. |
+| `/dashboard/students` | ✅ | ❌ | **Student Roster:** Renders face profile pictures and profile statuses. |
+| `/dashboard/mess` | ✅ | ❌ | **Mess Hub:** Weekly meal planners, menu ratings, and menu generator. |
+| `/dashboard/events` | ✅ | ✅ | **Events Portal:** Sports tournaments, tables, and AI captain selectors. |
+| `/dashboard/budget` | ✅ | ✅ | **Finances:** Interactive expenditure charts and utility estimations. |
+| `/dashboard/leave` | ✅ | ✅ | **Leave Portal:** Student application form & warden review console. |
+| `/dashboard/complaints` | ✅ | ✅ | **Complaints:** Root cause analyzer and ticket priority tracking. |
+| `/dashboard/emergency` | ✅ | ✅ | **SOS Console:** Warden alert receiver and student emergency trigger. |
+| `/dashboard/hostelgpt` | ✅ | ✅ | **HostelGPT Chat:** Natural language command processor. |
+| `/dashboard/inventory` | ✅ | ❌ | **Inventory:** CRUD directories tracking hostel physical assets. |
+
+---
+
+## 📦 Installation & Setup
+
+### Prerequisites
+*   Node.js (v18 or higher)
+*   Python 3.10+ (for the face recognition microservice)
+*   Supabase Account (Database instance and environment secrets)
+
+### Step-by-Step Installation
+
+1.  **Clone the Repository & Navigate to Workspace:**
+    ```bash
+    git clone https://github.com/Moulendu-Chowley/HostelEase.git
+    cd HostelEase
+    ```
+
+2.  **Install Frontend Dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Setup Environment Variables:**
+    Create a `.env.local` file in the root directory and configure the following keys:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+    NEXT_PUBLIC_DEEPFACE_SERVICE_URL=http://localhost:8000
+    ```
+
+4.  **Launch the Next.js Development Server:**
+    ```bash
+    npm run dev
+    ```
+    Open your browser and navigate to `http://localhost:3000` to view the website.
+
+5.  **(Optional) Launch Python Facial Recognition Service:**
+    Navigate to the face recognition service directory, set up a virtual environment, install requirements, and run the FastAPI app:
+    ```bash
+    cd services/face-recognition
+    python -m venv venv
+    source venv/bin/activate  # On Windows use: venv\Scripts\activate
+    pip install -r requirements.txt
+    uvicorn main:app --reload --port 8000
+    ```
+
+---
+
+## 🚀 Production Deployment
+
+To build and optimize the application for production:
+
+```bash
+npm run build
+npm run start
+```
+
+---
+
+**Created with ❤️ using Next.js, TypeScript, Supabase, and FastAPI DeepFace**
