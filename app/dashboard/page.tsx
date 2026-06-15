@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Profile {
@@ -476,9 +477,11 @@ export default function DashboardOverview() {
           <div className="lg:col-span-1 bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col items-center text-center">
             <div className="relative group mb-4">
               {profile?.photo_url ? (
-                <img
+                <Image
                   src={profile.photo_url}
                   alt={profile.full_name}
+                  width={128}
+                  height={128}
                   className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-blue-50"
                 />
               ) : (

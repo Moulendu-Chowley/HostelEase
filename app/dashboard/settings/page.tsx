@@ -90,7 +90,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="Hostel Manager System"
+                    defaultValue="HostelEase"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
