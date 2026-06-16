@@ -48,7 +48,7 @@ export default function AttendanceLogTable({
               <td className="p-3">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">{entry.image}</div>
-                  <span className="font-semibold">{entry.name}</span>
+                  <span className="font-semibold text-black">{entry.name}</span>
                 </div>
               </td>
               <td className="p-3 text-gray-600">{entry.rollNo}</td>
