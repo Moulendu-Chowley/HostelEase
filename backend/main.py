@@ -17,8 +17,11 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 import uvicorn
+import uuid
+import json
+from typing import List, Dict
 from deepface import DeepFace
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from pydantic import BaseModel
@@ -156,6 +159,106 @@ def recognize(body: RecognizeRequest):
 
     finally:
         tmp_path.unlink(missing_ok=True)
+
+
+# ── WebSockets for SOS alerts ───────────────────────────────────────────────────
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        print(f"WebSocket client connected. Total connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+            print(f"WebSocket client disconnected. Total connections: {len(self.active_connections)}")
+
+    async def broadcast(self, message: dict):
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                print(f"Error broadcasting message to socket: {e}")
+                disconnected.append(connection)
+        for conn in disconnected:
+            self.disconnect(conn)
+
+manager = ConnectionManager()
+active_alerts: Dict[str, dict] = {}
+
+
+@app.websocket("/ws/sos")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        # Send current active alerts immediately upon connection
+        if active_alerts:
+            await websocket.send_json({
+                "type": "sos_initial_state",
+                "alerts": list(active_alerts.values())
+            })
+        
+        while True:
+            # Receive and process messages from the client
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            msg_type = message.get("type")
+            
+            if msg_type == "sos_trigger":
+                alert_id = message.get("id") or str(uuid.uuid4())
+                alert = {
+                    "id": alert_id,
+                    "studentName": message.get("studentName", "Student"),
+                    "room": message.get("room", "Unknown Room"),
+                    "time": message.get("time", "Just now"),
+                    "status": "Active",
+                    "type": "Emergency SOS"
+                }
+                active_alerts[alert_id] = alert
+                await manager.broadcast({
+                    "type": "sos_alert",
+                    "alert": alert
+                })
+                
+            elif msg_type == "sos_acknowledge":
+                alert_id = message.get("id")
+                if alert_id in active_alerts:
+                    active_alerts[alert_id]["status"] = "Acknowledged"
+                    await manager.broadcast({
+                        "type": "sos_acknowledge",
+                        "id": alert_id
+                    })
+                    
+            elif msg_type == "sos_resolve":
+                alert_id = message.get("id")
+                if alert_id in active_alerts:
+                    active_alerts[alert_id]["status"] = "Resolved"
+                    await manager.broadcast({
+                        "type": "sos_resolve",
+                        "id": alert_id
+                    })
+                    
+            elif msg_type == "sos_dismiss":
+                alert_id = message.get("id")
+                if alert_id in active_alerts:
+                    # Remove from in-memory store if resolved
+                    if active_alerts[alert_id]["status"] == "Resolved":
+                        del active_alerts[alert_id]
+                    await manager.broadcast({
+                        "type": "sos_dismiss",
+                        "id": alert_id
+                    })
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        manager.disconnect(websocket)
 
 
 if __name__ == "__main__":

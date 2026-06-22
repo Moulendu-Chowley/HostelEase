@@ -12,7 +12,7 @@ import {
   ShieldAlert,
   UserCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface SOSAlert {
@@ -30,25 +30,10 @@ export default function EmergencyPage() {
   const [studentRoom, setStudentRoom] = useState("Room 204");
   const [isActivating, setIsActivating] = useState(false);
   const [sosStep, setSosStep] = useState(0);
-  const [activeAlerts, setActiveAlerts] = useState<SOSAlert[]>([
-    {
-      id: "1",
-      studentName: "Rahul Sharma",
-      room: "Room 105",
-      time: "10 mins ago",
-      status: "Acknowledged",
-      type: "Medical Alert",
-    },
-    {
-      id: "2",
-      studentName: "Priya Patel",
-      room: "Room 312",
-      time: "25 mins ago",
-      status: "Resolved",
-      type: "Intruder Alert",
-    },
-  ]);
+  const [activeAlerts, setActiveAlerts] = useState<SOSAlert[]>([]);
+  const socketRef = useRef<WebSocket | null>(null);
 
+  // Sync user profile
   useEffect(() => {
     const syncUser = async () => {
       const supabase = getSupabaseBrowserClient();
@@ -89,43 +74,123 @@ export default function EmergencyPage() {
     void syncUser();
   }, []);
 
+  // Establish WebSocket connection
+  useEffect(() => {
+    let reconnectTimeout: NodeJS.Timeout;
+    
+    const connect = () => {
+      const rawUrl = process.env.NEXT_PUBLIC_DEEPFACE_SERVICE_URL || "http://localhost:8000";
+      const wsUrl = rawUrl.replace(/^http/, "ws") + "/ws/sos";
+
+      console.log(`Emergency Console connecting to WebSocket: ${wsUrl}`);
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        console.log("Emergency Console WebSocket connected");
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log("Emergency Console received message:", message);
+
+          switch (message.type) {
+            case "sos_initial_state":
+              setActiveAlerts(message.alerts);
+              break;
+            case "sos_alert":
+              setActiveAlerts((prev) => {
+                const exists = prev.some((a) => a.id === message.alert.id);
+                if (exists) return prev;
+                return [message.alert, ...prev];
+              });
+              break;
+            case "sos_acknowledge":
+              setActiveAlerts((prev) =>
+                prev.map((alert) =>
+                  alert.id === message.id ? { ...alert, status: "Acknowledged" } : alert
+                )
+              );
+              break;
+            case "sos_resolve":
+              setActiveAlerts((prev) =>
+                prev.map((alert) =>
+                  alert.id === message.id ? { ...alert, status: "Resolved" } : alert
+                )
+              );
+              break;
+            case "sos_dismiss":
+              setActiveAlerts((prev) => prev.filter((alert) => alert.id !== message.id));
+              break;
+          }
+        } catch (err) {
+          console.error("Emergency Console error parsing socket message:", err);
+        }
+      };
+
+      socket.onclose = () => {
+        console.log("Emergency Console WebSocket disconnected. Reconnecting in 5 seconds...");
+        reconnectTimeout = setTimeout(connect, 5000);
+      };
+
+      socket.onerror = (error) => {
+        console.error("Emergency Console WebSocket error:", error);
+        socket.close();
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+      clearTimeout(reconnectTimeout);
+    };
+  }, []);
+
   const triggerSOS = () => {
     setIsActivating(true);
     setSosStep(1);
 
-    // Simulated multi-step response pipeline
+    const alertId = Math.random().toString();
+    // Send trigger to WebSocket
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        type: "sos_trigger",
+        id: alertId,
+        studentName: userName,
+        room: studentRoom,
+        time: "Just now"
+      }));
+    }
+
+    // Simulated local response pipeline animations
     setTimeout(() => setSosStep(2), 1500); // Face Identified
     setTimeout(() => setSosStep(3), 3000); // Room Located
     setTimeout(() => setSosStep(4), 4500); // Warden & Security Notified
     setTimeout(() => {
       setSosStep(5);
-      // Add alert to active list
-      const newAlert: SOSAlert = {
-        id: Math.random().toString(),
-        studentName: userName,
-        room: studentRoom,
-        time: "Just now",
-        status: "Active",
-        type: "Emergency SOS",
-      };
-      setActiveAlerts((prev) => [newAlert, ...prev]);
     }, 6000);
   };
 
   const resolveAlert = (id: string) => {
-    setActiveAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === id ? { ...alert, status: "Resolved" } : alert
-      )
-    );
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        type: "sos_resolve",
+        id
+      }));
+    }
   };
 
   const acknowledgeAlert = (id: string) => {
-    setActiveAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === id ? { ...alert, status: "Acknowledged" } : alert
-      )
-    );
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        type: "sos_acknowledge",
+        id
+      }));
+    }
   };
 
   const resetSOS = () => {

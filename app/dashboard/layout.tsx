@@ -1,6 +1,7 @@
 "use client";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PageContainer, SOSNotificationBanner } from "@/components";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -314,6 +315,7 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         <div className="p-8">{children}</div>
+        <SOSNotificationBanner />
       </motion.main>
     </div>
   );

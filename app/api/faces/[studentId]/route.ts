@@ -110,7 +110,7 @@ export async function PUT(
     // Photo saved to storage but DeepFace service is not running
     return NextResponse.json({
       message:
-        "Photo saved to storage. Start deepface-service and click Sync Faces to activate recognition.",
+        "Photo saved to storage. Start backend and click Sync Faces to activate recognition.",
       photoUrl,
       warning: "DeepFace service not reachable",
     });

@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       {
         matched: false,
         message:
-          "DeepFace service not running. Start it with: cd deepface-service && python main.py",
+          "DeepFace service not running. Start it with: cd backend && python main.py",
       },
       { status: 503 },
     );

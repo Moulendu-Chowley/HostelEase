@@ -503,7 +503,7 @@ export default function StudentsPage() {
           <li>
             Make sure the DeepFace service is running:{" "}
             <code className="bg-blue-100 px-1 rounded">
-              cd deepface-service &amp;&amp; python main.py
+              cd backend &amp;&amp; python main.py
             </code>
           </li>
         </ol>

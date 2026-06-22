@@ -6,6 +6,7 @@ export { default as Input } from "./ui/Input";
 export { default as Modal } from "./ui/Modal";
 export { default as StatCard } from "./ui/StatCard";
 export { default as Table } from "./ui/Table";
+export { default as SOSNotificationBanner } from "./ui/SOSNotificationBanner";
 
 // Feature Components
 export { AttendanceLogTable } from "./features/AttendanceLog";
