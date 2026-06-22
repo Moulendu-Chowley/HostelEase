@@ -76,15 +76,20 @@ export default function SignupPage() {
         className="relative w-full max-w-xl"
       >
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.8 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-2xl mb-4"
-          >
-            <Building2 className="h-10 w-10 text-blue-700" />
-          </motion.div>
-          <h1 className="text-4xl font-bold text-white mb-2">Create Account</h1>
+          <div className="inline-flex items-center justify-center gap-4 mb-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", duration: 0.8 }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl"
+            >
+              <Building2 className="h-8 w-8 text-blue-700" />
+            </motion.div>
+            <span className="text-4xl font-extrabold text-white tracking-tight">
+              HostelEase
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-blue-100">
             Join HostelEase with secure Supabase auth
           </p>
