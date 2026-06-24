@@ -210,6 +210,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Student not found." }, { status: 404 });
   }
 
+  // Prevent consecutive duplicate logs of the same type (entry -> entry or exit -> exit)
+  const { data: lastEvent } = await adminClient
+    .from("attendance_events")
+    .select("id, type, captured_at, camera_label, confidence")
+    .eq("profile_id", student.id)
+    .order("captured_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastEvent && String(lastEvent.type).toLowerCase() === mode) {
+    return NextResponse.json(
+      {
+        error: `${student.full_name} is already ${
+          mode === "entry" ? "inside the campus (entry already logged)" : "outside the campus (exit already logged)"
+        }.`,
+      },
+      { status: 400 },
+    );
+  }
+
   const capturedAt = new Date();
   const { data: created, error: createError } = await adminClient
     .from("attendance_events")

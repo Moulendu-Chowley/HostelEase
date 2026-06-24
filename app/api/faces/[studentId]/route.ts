@@ -76,7 +76,7 @@ export async function PUT(
   const { data: urlData } = adminClient.storage
     .from("student-photos")
     .getPublicUrl(`${studentId}.jpg`);
-  photoUrl = urlData.publicUrl;
+  photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
   const { error: updateProfileError } = await adminClient
     .from("profiles")
